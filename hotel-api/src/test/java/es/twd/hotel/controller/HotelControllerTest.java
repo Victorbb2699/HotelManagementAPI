@@ -1,8 +1,11 @@
 package es.twd.hotel.controller;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
@@ -14,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +25,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.twd.hotel.dto.AddressDTO;
 import es.twd.hotel.dto.HotelCreateDTO;
 import es.twd.hotel.dto.HotelResponseDTO;
+import es.twd.hotel.dto.HotelUpdateDTO;
+import es.twd.hotel.dto.UpdateAddressDTO;
 import es.twd.hotel.service.HotelService;
 
 @WebMvcTest(HotelController.class)
@@ -34,8 +40,11 @@ class HotelControllerTest {
 	private HotelService hotelService;
 
 	private ObjectMapper objectMapper;
+
 	private HotelCreateDTO hotelCreateDTO;
 	private HotelResponseDTO hotelResponseDTO;
+	private HotelUpdateDTO hotelUpdateDTO;
+	private UpdateAddressDTO updateAddressDTO;
 
 	@BeforeEach
 	void setUp() {
@@ -47,6 +56,12 @@ class HotelControllerTest {
 
 		hotelResponseDTO = HotelResponseDTO.builder().id(1L).name("Hotel Test").stars(4)
 				.address(hotelCreateDTO.getAddress()).build();
+
+		hotelUpdateDTO = HotelUpdateDTO.builder().name("Updated Hotel").stars(5).build();
+
+		updateAddressDTO = UpdateAddressDTO.builder().street("New Street").city("New City").country("New Country")
+				.postalCode("54321").build();
+
 	}
 
 	@Test
@@ -77,4 +92,29 @@ class HotelControllerTest {
 
 		mockMvc.perform(get("/hotels/city/CityX")).andExpect(status().isOk());
 	}
+
+	@Test
+	void updateHotel_shouldReturnOk() throws Exception {
+		when(hotelService.updateHotel(1L, hotelUpdateDTO)).thenReturn(hotelResponseDTO);
+
+		mockMvc.perform(put("/hotels/1").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(hotelUpdateDTO))).andExpect(status().isOk());
+	}
+
+	@Test
+	void updateHotelAddress_shouldReturnOk() throws Exception {
+		when(hotelService.updateHotelAddress(1L, updateAddressDTO)).thenReturn(hotelResponseDTO);
+
+		mockMvc.perform(put("/hotels/1/address").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(updateAddressDTO))).andExpect(status().isOk());
+	}
+
+	@Test
+	@WithMockUser(roles = "ADMIN")
+	void deleteHotel_shouldReturnNoContent() throws Exception {
+		doNothing().when(hotelService).deleteHotel(1L);
+
+		mockMvc.perform(delete("/hotels/1")).andExpect(status().isNoContent());
+	}
+
 }
