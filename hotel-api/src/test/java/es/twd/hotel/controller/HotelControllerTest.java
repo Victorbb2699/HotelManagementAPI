@@ -1,6 +1,9 @@
 package es.twd.hotel.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,6 +30,7 @@ import es.twd.hotel.dto.HotelCreateDTO;
 import es.twd.hotel.dto.HotelResponseDTO;
 import es.twd.hotel.dto.HotelUpdateDTO;
 import es.twd.hotel.dto.UpdateAddressDTO;
+import es.twd.hotel.exception.ResourceNotFoundException;
 import es.twd.hotel.service.HotelService;
 
 @WebMvcTest(HotelController.class)
@@ -115,6 +119,36 @@ class HotelControllerTest {
 		doNothing().when(hotelService).deleteHotel(1L);
 
 		mockMvc.perform(delete("/hotels/1")).andExpect(status().isNoContent());
+	}
+
+	@Test
+	void getHotelById_shouldReturn404_whenNotFound() throws Exception {
+		when(hotelService.getHotelById(99L)).thenThrow(new ResourceNotFoundException("Hotel not found"));
+
+		mockMvc.perform(get("/hotels/99")).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void createHotel_shouldReturn400_whenInvalidJson() throws Exception {
+		String invalidJson = "{ \"name\": \"Test Hotel\", \"stars\": \"notANumber\" }";
+
+		mockMvc.perform(post("/hotels").contentType(MediaType.APPLICATION_JSON).content(invalidJson))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void updateHotel_shouldReturn404_whenNotFound() throws Exception {
+		when(hotelService.updateHotel(eq(99L), any())).thenThrow(new ResourceNotFoundException("Hotel not found"));
+
+		mockMvc.perform(put("/hotels/99").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(hotelCreateDTO))).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void deleteHotel_shouldReturn404_whenNotFound() throws Exception {
+		doThrow(new ResourceNotFoundException("Hotel not found")).when(hotelService).deleteHotel(99L);
+
+		mockMvc.perform(delete("/hotels/99")).andExpect(status().isNotFound());
 	}
 
 }
