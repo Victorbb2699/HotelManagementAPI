@@ -3,6 +3,7 @@ package es.twd.hotel.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,7 +37,7 @@ class HotelServiceTest {
 
 	@InjectMocks
 	private HotelService hotelService;
-	
+
 	private Hotel hotel;
 	private HotelCreateDTO hotelCreateDTO;
 	private UpdateAddressDTO updateAddressDTO;
@@ -156,5 +157,24 @@ class HotelServiceTest {
 
 		assertThatThrownBy(() -> hotelService.updateHotel(2L, hotelUpdateDTO))
 				.isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("Hotel not found with id 2");
+	}
+
+	@Test
+	void deleteHotel_existingHotel_shouldCallRepositoryDelete() {
+		when(hotelRepository.findById(1L)).thenReturn(Optional.of(hotel));
+
+		hotelService.deleteHotel(1L);
+
+		verify(hotelRepository, times(1)).delete(hotel);
+	}
+
+	@Test
+	void deleteHotel_nonExistingHotel_shouldThrowException() {
+		when(hotelRepository.findById(2L)).thenReturn(Optional.empty());
+
+		org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class,
+				() -> hotelService.deleteHotel(2L));
+
+		verify(hotelRepository, never()).delete(any(Hotel.class));
 	}
 }

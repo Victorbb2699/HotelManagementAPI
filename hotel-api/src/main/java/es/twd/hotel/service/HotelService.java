@@ -63,4 +63,10 @@ public class HotelService {
 		return HotelMapper.toResponseDTO(updated);
 	}
 
+	public void deleteHotel(Long hotelId) {
+		Hotel hotel = hotelRepository.findById(hotelId)
+				.orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id " + hotelId));
+		hotelRepository.delete(hotel);
+	}
+
 }
