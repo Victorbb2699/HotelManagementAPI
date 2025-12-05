@@ -2,6 +2,9 @@ package es.twd.hotel.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,10 +42,13 @@ public class HotelController {
 		return new ResponseEntity<>(hotelService.createHotel(dto), HttpStatus.CREATED);
 	}
 
-	@Operation(summary = "Get all hotels", description = "Returns a list of all hotels")
+	@Operation(summary = "Get all hotels (paginated)", description = "Returns a paginated and sortable list of hotels")
 	@GetMapping
-	public ResponseEntity<List<HotelResponseDTO>> getAllHotels() {
-		return ResponseEntity.ok(hotelService.getAllHotels());
+	public ResponseEntity<Page<HotelResponseDTO>> getAllHotels(
+			@PageableDefault(size = 10, sort = "name") Pageable pageable) {
+
+		Page<HotelResponseDTO> response = hotelService.getAllHotels(pageable);
+		return ResponseEntity.ok(response);
 	}
 
 	@Operation(summary = "Get hotel by ID", description = "Returns hotel information for a given ID")

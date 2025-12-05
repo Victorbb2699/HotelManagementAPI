@@ -18,6 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import es.twd.hotel.dto.AddressDTO;
 import es.twd.hotel.dto.HotelCreateDTO;
@@ -82,13 +86,19 @@ class HotelServiceTest {
 	}
 
 	@Test
-	void getAllHotels_shouldReturnListOfHotels() {
-		when(hotelRepository.findAll()).thenReturn(Collections.singletonList(hotel));
+	void getAllHotels_shouldReturnPagedHotels() {
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Hotel> page = new PageImpl<>(List.of(hotel), pageable, 1);
 
-		List<HotelResponseDTO> response = hotelService.getAllHotels();
+		when(hotelRepository.findAll(pageable)).thenReturn(page);
 
-		assertThat(response).hasSize(1);
-		assertThat(response.get(0).getName()).isEqualTo("Hotel Test");
+		Page<HotelResponseDTO> response = hotelService.getAllHotels(pageable);
+
+		assertThat(response.getContent()).hasSize(1);
+		assertThat(response.getContent().get(0).getName()).isEqualTo("Hotel Test");
+		assertThat(response.getTotalElements()).isEqualTo(1);
+
+		verify(hotelRepository).findAll(pageable);
 	}
 
 	@Test

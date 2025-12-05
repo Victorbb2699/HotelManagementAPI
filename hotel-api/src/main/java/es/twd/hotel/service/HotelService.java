@@ -3,6 +3,8 @@ package es.twd.hotel.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import es.twd.hotel.dto.HotelCreateDTO;
@@ -27,8 +29,9 @@ public class HotelService {
 		return HotelMapper.toResponseDTO(saved);
 	}
 
-	public List<HotelResponseDTO> getAllHotels() {
-		return hotelRepository.findAll().stream().map(HotelMapper::toResponseDTO).collect(Collectors.toList());
+	public Page<HotelResponseDTO> getAllHotels(Pageable pageable) {
+		Page<Hotel> hotels = hotelRepository.findAll(pageable);
+		return hotels.map(HotelMapper::toResponseDTO);
 	}
 
 	public HotelResponseDTO getHotelById(Long hotelId) {
