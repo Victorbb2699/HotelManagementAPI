@@ -79,7 +79,8 @@ public class HotelController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel updated successfully"),
 			@ApiResponse(responseCode = "404", description = "Hotel not found"),
 			@ApiResponse(responseCode = "400", description = "Invalid input data"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
+			@ApiResponse(responseCode = "401", description = "Unauthorized access"), })
+	@ApiResponse(responseCode = "409", description = "Hotel with same name already exists in city")
 	@PutMapping("/{id}")
 	public ResponseEntity<HotelResponseDTO> updateHotel(@PathVariable Long id,
 			@RequestBody @Validated HotelUpdateDTO dto) {
@@ -90,7 +91,8 @@ public class HotelController {
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel address updated successfully"),
 			@ApiResponse(responseCode = "404", description = "Hotel not found"),
 			@ApiResponse(responseCode = "400", description = "Invalid input data"),
-			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
+			@ApiResponse(responseCode = "401", description = "Unauthorized access"),
+			@ApiResponse(responseCode = "409", description = "Hotel with same name already exists in city") })
 	@PutMapping("/{id}/address")
 	public ResponseEntity<HotelResponseDTO> updateHotelAddress(@PathVariable Long id,
 			@RequestBody @Validated UpdateAddressDTO dto) {
