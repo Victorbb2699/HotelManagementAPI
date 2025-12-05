@@ -56,7 +56,7 @@ class HotelControllerTest {
 	private HotelCreateDTO hotelCreateDTO;
 	private HotelResponseDTO hotelResponseDTO;
 	private HotelUpdateDTO hotelUpdateDTO;
-	private UpdateAddressDTO updateAddressDTO;
+	private UpdateAddressDTO updateAddressDTO; 
 
 	@BeforeEach
 	void setUp() {

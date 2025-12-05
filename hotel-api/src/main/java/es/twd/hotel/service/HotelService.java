@@ -56,6 +56,17 @@ public class HotelService {
 	public HotelResponseDTO updateHotelAddress(Long hotelId, UpdateAddressDTO dto) {
 		Hotel hotel = hotelRepository.findById(hotelId)
 				.orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id " + hotelId));
+
+		String newCity = dto.getCity();
+		String hotelName = hotel.getName();
+
+		if (!hotel.getAddress().getCity().equalsIgnoreCase(newCity)) {
+			if (hotelRepository.existsByNameAndAddress_CityIgnoreCase(hotelName, newCity)) {
+				throw new ResourceAlreadyExistsException(
+						"Hotel with name '" + hotelName + "' already exists in city '" + newCity + "'");
+			}
+		}
+
 		HotelMapper.updateAddressEntity(hotel.getAddress(), dto);
 		Hotel updated = hotelRepository.save(hotel);
 		return HotelMapper.toResponseDTO(updated);
@@ -64,9 +75,16 @@ public class HotelService {
 	public HotelResponseDTO updateHotel(Long hotelId, HotelUpdateDTO dto) {
 		Hotel hotel = hotelRepository.findById(hotelId)
 				.orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id " + hotelId));
+		if (dto.getName() != null) {
+			String newName = dto.getName();
+			String city = hotel.getAddress().getCity();
+			if (hotelRepository.existsByNameAndAddress_CityIgnoreCase(newName, city)) {
+				throw new ResourceAlreadyExistsException(
+						"Hotel with name '" + newName + "' already exists in city '" + city + "'");
+			}
+			hotel.setName(newName);
+		}
 
-		if (dto.getName() != null)
-			hotel.setName(dto.getName());
 		if (dto.getStars() != null)
 			hotel.setStars(dto.getStars());
 

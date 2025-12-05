@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,7 @@ class HotelServiceTest {
 	private HotelService hotelService;
 
 	private Hotel hotel;
+	private Hotel otherHotel;
 	private HotelCreateDTO hotelCreateDTO;
 	private UpdateAddressDTO updateAddressDTO;
 	private HotelUpdateDTO hotelUpdateDTO;
@@ -56,6 +58,12 @@ class HotelServiceTest {
 		address.setCity("CityX");
 		address.setCountry("CountryY");
 		address.setPostalCode("12345");
+
+		Address address2 = new Address();
+		address2.setStreet("Street 456");
+		address2.setCity("CityX");
+		address2.setCountry("CountryY");
+		address2.setPostalCode("54321");
 
 		hotel = new Hotel();
 		hotel.setId(1L);
@@ -71,6 +79,9 @@ class HotelServiceTest {
 				.postalCode("54321").build();
 
 		hotelUpdateDTO = HotelUpdateDTO.builder().name("Hotel Updated").stars(5).build();
+
+		otherHotel = Hotel.builder().id(2L).name("Hotel Test Duplicate").stars(3).address(address).build();
+		otherHotel = Hotel.builder().id(2L).name("Hotel Test Duplicate").stars(3).address(address2).build();
 	}
 
 	@Test
@@ -85,6 +96,14 @@ class HotelServiceTest {
 		assertThat(response.getStars()).isEqualTo(4);
 
 		verify(hotelRepository, times(1)).save(any(Hotel.class));
+	}
+
+	@Test
+	void createHotel_existingHotel_throwsException() {
+		when(hotelRepository.existsByNameAndAddress_CityIgnoreCase("Hotel Test", "CityX")).thenReturn(true);
+
+		assertThrows(ResourceAlreadyExistsException.class, () -> hotelService.createHotel(hotelCreateDTO));
+		verify(hotelRepository, never()).save(any());
 	}
 
 	@Test
@@ -169,6 +188,55 @@ class HotelServiceTest {
 
 		assertThatThrownBy(() -> hotelService.updateHotel(2L, hotelUpdateDTO))
 				.isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("Hotel not found with id 2");
+	}
+
+	@Test
+	void updateHotel_changeName_noConflict_success() {
+		when(hotelRepository.findById(hotel.getId())).thenReturn(Optional.of(hotel));
+		when(hotelRepository.existsByNameAndAddress_CityIgnoreCase(anyString(), anyString())).thenReturn(false);
+		when(hotelRepository.save(hotel)).thenReturn(hotel);
+
+		HotelResponseDTO response = hotelService.updateHotel(hotel.getId(), hotelUpdateDTO);
+
+		assertThat(response.getName()).isEqualTo("Hotel Updated");
+		assertThat(response.getStars()).isEqualTo(5);
+		verify(hotelRepository).save(hotel);
+	}
+
+	@Test
+	void updateHotel_changeName_conflict_throwsException() {
+		when(hotelRepository.findById(hotel.getId())).thenReturn(Optional.of(hotel));
+		when(hotelRepository.existsByNameAndAddress_CityIgnoreCase(anyString(), anyString())).thenReturn(true);
+
+		hotelUpdateDTO.setName(otherHotel.getName());
+
+		assertThrows(ResourceAlreadyExistsException.class,
+				() -> hotelService.updateHotel(hotel.getId(), hotelUpdateDTO));
+
+		verify(hotelRepository, never()).save(any());
+	}
+
+	@Test
+	void updateHotel_nonExistingHotel_throwsNotFound() {
+		when(hotelRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> hotelService.updateHotel(99L, hotelUpdateDTO));
+	}
+
+	@Test
+	void updateHotelAddress_changeCity_conflict_throwsException_usingOtherHotel() {
+		UpdateAddressDTO conflictingDTO = UpdateAddressDTO.builder().street("New Street").city("CityConflict")
+				.country("CountryY").postalCode("54321").build();
+
+		when(hotelRepository.findById(hotel.getId())).thenReturn(Optional.of(hotel));
+
+		when(hotelRepository.existsByNameAndAddress_CityIgnoreCase(hotel.getName(), conflictingDTO.getCity()))
+				.thenReturn(true);
+
+		assertThrows(ResourceAlreadyExistsException.class,
+				() -> hotelService.updateHotelAddress(hotel.getId(), conflictingDTO));
+
+		verify(hotelRepository, never()).save(any(Hotel.class));
 	}
 
 	@Test
