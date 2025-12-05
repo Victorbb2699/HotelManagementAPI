@@ -36,4 +36,12 @@ class HotelUpdateDTOTest {
 		assertThat(violations).hasSize(1);
 	}
 
+	@Test
+	void whenUpdateNameOnlyNumbers_thenViolation() {
+		HotelUpdateDTO dto = HotelUpdateDTO.builder().name("9876").build();
+
+		Set<ConstraintViolation<HotelUpdateDTO>> violations = validator.validate(dto);
+		assertThat(violations).extracting("message").contains("Hotel name must contain at least one letter");
+	}
+
 }

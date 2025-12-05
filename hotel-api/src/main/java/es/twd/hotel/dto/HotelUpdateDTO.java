@@ -2,6 +2,7 @@ package es.twd.hotel.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class HotelUpdateDTO {
 
+	@Pattern(regexp = ".*[a-zA-Z].*", message = "Hotel name must contain at least one letter")
 	private String name; // puede ser opcional, se permite null para que no se actualice el dato
 
 	@Min(value = 1, message = "Stars must be at least 1")
