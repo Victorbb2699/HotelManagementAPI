@@ -35,13 +35,26 @@ class HotelCreateDTOTest {
 
 	@Test
 	void whenInvalidHotelCreateDTO_thenViolations() {
-		HotelCreateDTO dto = HotelCreateDTO.builder().name("") // NotBlank violation
-				.stars(0) // Min violation
-				.address(null) // NotNull violation
-				.build();
+		HotelCreateDTO dto = HotelCreateDTO.builder().name("").stars(0).address(null).build();
 
 		Set<ConstraintViolation<HotelCreateDTO>> violations = validator.validate(dto);
-		assertThat(violations).hasSize(3);
+
+		assertThat(violations).hasSize(4);
+
+		assertThat(violations).extracting(ConstraintViolation::getMessage).containsExactlyInAnyOrder(
+				"Hotel name is required", "Hotel name must contain at least one letter", "Stars must be at least 1",
+				"Address is required" //
+		);
+	}
+
+	@Test
+	void whenNameOnlyNumbers_thenViolation() {
+		AddressDTO address = AddressDTO.builder().street("Street 1").city("CityX").country("CountryY")
+				.postalCode("12345").build();
+		HotelCreateDTO dto = HotelCreateDTO.builder().name("12345").stars(4).address(address).build();
+
+		Set<ConstraintViolation<HotelCreateDTO>> violations = validator.validate(dto);
+		assertThat(violations).extracting("message").contains("Hotel name must contain at least one letter");
 	}
 
 }
