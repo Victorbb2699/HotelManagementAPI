@@ -40,7 +40,8 @@ public class HotelController {
 
 	@Operation(summary = "Create a new hotel", description = "Creates a new hotel with a name, stars and address")
 	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Hotel created successfully"),
-			@ApiResponse(responseCode = "400", description = "Invalid input data") })
+			@ApiResponse(responseCode = "400", description = "Invalid input data"),
+			@ApiResponse(responseCode = "409", description = "Hotel with same name already exists in the city") })
 	@PostMapping
 	public ResponseEntity<HotelResponseDTO> createHotel(@RequestBody @Validated HotelCreateDTO dto) {
 		return new ResponseEntity<>(hotelService.createHotel(dto), HttpStatus.CREATED);

@@ -10,7 +10,8 @@ import es.twd.hotel.entity.Hotel;
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
-	// Buscar hoteles por ciudad (insensible a mayúsculas)
 	List<Hotel> findByAddress_CityIgnoreCase(String city);
+	
+	boolean existsByNameAndAddress_CityIgnoreCase(String name, String city);
 
 }
