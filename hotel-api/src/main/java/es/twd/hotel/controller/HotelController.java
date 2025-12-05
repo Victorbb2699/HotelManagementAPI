@@ -24,6 +24,8 @@ import es.twd.hotel.dto.HotelUpdateDTO;
 import es.twd.hotel.dto.UpdateAddressDTO;
 import es.twd.hotel.service.HotelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -37,12 +39,16 @@ public class HotelController {
 	private final HotelService hotelService;
 
 	@Operation(summary = "Create a new hotel", description = "Creates a new hotel with a name, stars and address")
+	@ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Hotel created successfully"),
+			@ApiResponse(responseCode = "400", description = "Invalid input data") })
 	@PostMapping
 	public ResponseEntity<HotelResponseDTO> createHotel(@RequestBody @Validated HotelCreateDTO dto) {
 		return new ResponseEntity<>(hotelService.createHotel(dto), HttpStatus.CREATED);
 	}
 
 	@Operation(summary = "Get all hotels (paginated)", description = "Returns a paginated and sortable list of hotels")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotels retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@GetMapping
 	public ResponseEntity<Page<HotelResponseDTO>> getAllHotels(
 			@PageableDefault(size = 10, sort = "name") Pageable pageable) {
@@ -52,18 +58,27 @@ public class HotelController {
 	}
 
 	@Operation(summary = "Get hotel by ID", description = "Returns hotel information for a given ID")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel retrieved successfully"),
+			@ApiResponse(responseCode = "404", description = "Hotel not found"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@GetMapping("/{id}")
 	public ResponseEntity<HotelResponseDTO> getHotelById(@PathVariable Long id) {
 		return ResponseEntity.ok(hotelService.getHotelById(id));
 	}
 
 	@Operation(summary = "Get hotels by city", description = "Returns hotels filtered by city name")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotels retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@GetMapping("/city/{city}")
 	public ResponseEntity<List<HotelResponseDTO>> getHotelsByCity(@PathVariable String city) {
 		return ResponseEntity.ok(hotelService.getHotelsByCity(city));
 	}
 
 	@Operation(summary = "Update hotel fields", description = "Updates name and stars of the hotel")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel updated successfully"),
+			@ApiResponse(responseCode = "404", description = "Hotel not found"),
+			@ApiResponse(responseCode = "400", description = "Invalid input data"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@PutMapping("/{id}")
 	public ResponseEntity<HotelResponseDTO> updateHotel(@PathVariable Long id,
 			@RequestBody @Validated HotelUpdateDTO dto) {
@@ -71,6 +86,10 @@ public class HotelController {
 	}
 
 	@Operation(summary = "Update hotel address", description = "Updates the address of a hotel")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel address updated successfully"),
+			@ApiResponse(responseCode = "404", description = "Hotel not found"),
+			@ApiResponse(responseCode = "400", description = "Invalid input data"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@PutMapping("/{id}/address")
 	public ResponseEntity<HotelResponseDTO> updateHotelAddress(@PathVariable Long id,
 			@RequestBody @Validated UpdateAddressDTO dto) {
@@ -78,6 +97,10 @@ public class HotelController {
 	}
 
 	@Operation(summary = "Delete a hotel", description = "Deletes a hotel by id. Only admin users allowed")
+	@ApiResponses(value = { @ApiResponse(responseCode = "204", description = "Hotel deleted successfully"),
+			@ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role"),
+			@ApiResponse(responseCode = "404", description = "Hotel not found"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> deleteHotel(@PathVariable Long id) {
