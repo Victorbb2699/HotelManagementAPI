@@ -2,6 +2,7 @@ package es.twd.hotel.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -30,6 +31,7 @@ import es.twd.hotel.dto.HotelUpdateDTO;
 import es.twd.hotel.dto.UpdateAddressDTO;
 import es.twd.hotel.entity.Address;
 import es.twd.hotel.entity.Hotel;
+import es.twd.hotel.exception.ResourceAlreadyExistsException;
 import es.twd.hotel.exception.ResourceNotFoundException;
 import es.twd.hotel.repository.HotelRepository;
 
@@ -186,5 +188,17 @@ class HotelServiceTest {
 				() -> hotelService.deleteHotel(2L));
 
 		verify(hotelRepository, never()).delete(any(Hotel.class));
+	}
+
+	@Test
+	void whenCreateDuplicateHotel_thenThrowException() {
+		AddressDTO address = AddressDTO.builder().street("Street 123").city("CityX").country("CountryY")
+				.postalCode("12345").build();
+		HotelCreateDTO dto = HotelCreateDTO.builder().name("Hotel Test").stars(4).address(address).build();
+
+		when(hotelRepository.existsByNameAndAddress_CityIgnoreCase(dto.getName(), dto.getAddress().getCity()))
+				.thenReturn(true);
+
+		assertThrows(ResourceAlreadyExistsException.class, () -> hotelService.createHotel(dto));
 	}
 }

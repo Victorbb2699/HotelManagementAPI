@@ -12,6 +12,7 @@ import es.twd.hotel.dto.HotelResponseDTO;
 import es.twd.hotel.dto.HotelUpdateDTO;
 import es.twd.hotel.dto.UpdateAddressDTO;
 import es.twd.hotel.entity.Hotel;
+import es.twd.hotel.exception.ResourceAlreadyExistsException;
 import es.twd.hotel.exception.ResourceNotFoundException;
 import es.twd.hotel.mapper.HotelMapper;
 import es.twd.hotel.repository.HotelRepository;
@@ -24,6 +25,13 @@ public class HotelService {
 	private final HotelRepository hotelRepository;
 
 	public HotelResponseDTO createHotel(HotelCreateDTO dto) {
+		String city = dto.getAddress().getCity();
+
+		boolean exists = hotelRepository.existsByNameAndAddress_CityIgnoreCase(dto.getName(), city);
+		if (exists) {
+			throw new ResourceAlreadyExistsException(
+					"Hotel with name '" + dto.getName() + "' already exists in city '" + city + "'");
+		}
 		Hotel hotel = HotelMapper.toHotelEntity(dto);
 		Hotel saved = hotelRepository.save(hotel);
 		return HotelMapper.toResponseDTO(saved);
