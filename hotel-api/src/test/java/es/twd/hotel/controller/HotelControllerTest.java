@@ -1,17 +1,21 @@
 package es.twd.hotel.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -77,10 +85,42 @@ class HotelControllerTest {
 	}
 
 	@Test
-	void getAllHotels_shouldReturnOk() throws Exception {
-		when(hotelService.getAllHotels()).thenReturn(Collections.singletonList(hotelResponseDTO));
+	void getAllHotels_shouldReturnPagedHotels() throws Exception {
+
+		HotelResponseDTO dto = new HotelResponseDTO(1L, "Hotel Test", 4, null);
+
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<HotelResponseDTO> page = new PageImpl<>(List.of(dto), pageable, 1);
+
+		when(hotelService.getAllHotels(any(Pageable.class))).thenReturn(page);
+
+		mockMvc.perform(get("/hotels?page=0&size=10")).andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray()).andExpect(jsonPath("$.content[0].id").value(1))
+				.andExpect(jsonPath("$.content[0].name").value("Hotel Test"))
+				.andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.totalPages").value(1));
+	}
+
+	@Test
+	void getAllHotels_shouldApplySorting() throws Exception {
+
+		Page<HotelResponseDTO> emptyPage = Page.empty();
+		when(hotelService.getAllHotels(any(Pageable.class))).thenReturn(emptyPage);
+
+		mockMvc.perform(get("/hotels?sort=stars,desc")).andExpect(status().isOk());
+
+		verify(hotelService).getAllHotels(argThat(pageable -> pageable.getSort().getOrderFor("stars").isDescending()));
+	}
+
+	@Test
+	void getAllHotels_shouldUseDefaultPageable() throws Exception {
+
+		Page<HotelResponseDTO> emptyPage = Page.empty();
+		when(hotelService.getAllHotels(any(Pageable.class))).thenReturn(emptyPage);
 
 		mockMvc.perform(get("/hotels")).andExpect(status().isOk());
+
+		verify(hotelService).getAllHotels(argThat(pageable -> pageable.getPageNumber() == 0
+				&& pageable.getPageSize() == 10 && pageable.getSort().getOrderFor("name").isAscending()));
 	}
 
 	@Test
