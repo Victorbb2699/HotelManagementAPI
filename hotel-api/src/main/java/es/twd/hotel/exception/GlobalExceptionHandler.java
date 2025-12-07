@@ -8,7 +8,6 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,7 +21,7 @@ public class GlobalExceptionHandler {
 	private ApiError buildError(HttpStatus status, String message, String path) {
 		return ApiError.builder().timestamp(LocalDateTime.now()).status(status.value()).error(status.getReasonPhrase())
 				.message(message).path(path).build();
-	}
+	} 
 
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<ApiError> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
@@ -36,7 +35,7 @@ public class GlobalExceptionHandler {
 		String msg = ex.getBindingResult().getFieldErrors().stream()
 				.map(field -> field.getField() + ": " + field.getDefaultMessage()).collect(Collectors.joining(", "));
 
-		ApiError error = buildError(HttpStatus.BAD_REQUEST, msg, request.getRequestURI());
+		ApiError error = buildError(HttpStatus.BAD_REQUEST, msg, request.getRequestURI()); 
 		return ResponseEntity.badRequest().body(error);
 	}
 
@@ -78,11 +77,15 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(PropertyReferenceException.class)
 	public ResponseEntity<ApiError> handleInvalidSort(PropertyReferenceException ex, HttpServletRequest request) {
-
 		ApiError error = new ApiError(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Invalid sort parameter",
 				ex.getMessage(), request.getRequestURI());
-
 		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ApiError> handleInvalidSort(IllegalArgumentException ex, HttpServletRequest request) {
+		ApiError error = buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
 	}
 
 }

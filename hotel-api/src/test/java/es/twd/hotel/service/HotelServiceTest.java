@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import es.twd.hotel.dto.AddressDTO;
 import es.twd.hotel.dto.HotelCreateDTO;
@@ -269,4 +270,31 @@ class HotelServiceTest {
 
 		assertThrows(ResourceAlreadyExistsException.class, () -> hotelService.createHotel(dto));
 	}
+
+	@Test
+	void getAllHotels_sortedByCityAndCountry_shouldReturnCorrectOrder() {
+		Pageable pageable = PageRequest.of(0, 10,
+				Sort.by("address.city").ascending().and(Sort.by("address.country").descending()));
+
+		Address address1 = Address.builder().street("Street 1").city("Madrid").country("Spain").postalCode("28001")
+				.build();
+		Address address2 = Address.builder().street("Street 2").city("Barcelona").country("Spain").postalCode("08001")
+				.build();
+		Address address3 = Address.builder().street("Street 3").city("Madrid").country("France").postalCode("75001")
+				.build();
+
+		Hotel hotel1 = Hotel.builder().id(1L).name("Hotel A").stars(4).address(address1).build();
+		Hotel hotel2 = Hotel.builder().id(2L).name("Hotel B").stars(3).address(address2).build();
+		Hotel hotel3 = Hotel.builder().id(3L).name("Hotel C").stars(5).address(address3).build();
+
+		when(hotelRepository.findAll(pageable))
+				.thenReturn(new PageImpl<>(List.of(hotel2, hotel3, hotel1), pageable, 3));
+
+		Page<HotelResponseDTO> result = hotelService.getAllHotels(pageable);
+
+		assertThat(result.getContent().get(0).getAddress().getCity()).isEqualTo("Barcelona");
+		assertThat(result.getContent().get(1).getAddress().getCountry()).isEqualTo("France");
+		assertThat(result.getContent().get(2).getAddress().getCity()).isEqualTo("Madrid");
+	}
+
 }

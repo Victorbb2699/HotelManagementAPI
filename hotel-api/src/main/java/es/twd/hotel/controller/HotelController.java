@@ -60,6 +60,7 @@ public class HotelController {
 
 	@Operation(summary = "Get hotel by ID", description = "Returns hotel information for a given ID")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotel retrieved successfully"),
+			@ApiResponse(responseCode = "400", description = "Invalid sort parameter"),
 			@ApiResponse(responseCode = "404", description = "Hotel not found"),
 			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
 	@GetMapping("/{id}")
