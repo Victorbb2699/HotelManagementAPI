@@ -1,6 +1,7 @@
 package es.twd.hotel.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -38,6 +39,13 @@ public class HotelService {
 	}
 
 	public Page<HotelResponseDTO> getAllHotels(Pageable pageable) {
+
+		pageable.getSort().forEach(order -> {
+			String prop = order.getProperty();
+			if (!Set.of("name", "stars", "address.city", "address.country").contains(prop)) {
+				throw new IllegalArgumentException("Invalid sort property: " + prop);
+			}
+		});
 		Page<Hotel> hotels = hotelRepository.findAll(pageable);
 		return hotels.map(HotelMapper::toResponseDTO);
 	}
