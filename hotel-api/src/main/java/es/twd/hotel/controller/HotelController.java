@@ -47,6 +47,15 @@ public class HotelController {
 		return new ResponseEntity<>(hotelService.createHotel(dto), HttpStatus.CREATED);
 	}
 
+	@Operation(summary = "Get all hotels", description = "Returns a list of all hotels without pagination")
+	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotels retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
+	@GetMapping("/all")
+	public ResponseEntity<List<HotelResponseDTO>> getAllHotelsWithoutPagination() {
+		List<HotelResponseDTO> hotels = hotelService.getAllHotels();
+		return ResponseEntity.ok(hotels);
+	}
+
 	@Operation(summary = "Get all hotels (paginated)", description = "Returns a paginated and sortable list of hotels")
 	@ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Hotels retrieved successfully"),
 			@ApiResponse(responseCode = "401", description = "Unauthorized access") })
