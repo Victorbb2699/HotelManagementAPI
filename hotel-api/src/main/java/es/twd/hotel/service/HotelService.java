@@ -38,6 +38,10 @@ public class HotelService {
 		return HotelMapper.toResponseDTO(saved);
 	}
 
+	public List<HotelResponseDTO> getAllHotels() {
+		return hotelRepository.findAll().stream().map(HotelMapper::toResponseDTO).collect(Collectors.toList());
+	}
+
 	public Page<HotelResponseDTO> getAllHotels(Pageable pageable) {
 
 		pageable.getSort().forEach(order -> {

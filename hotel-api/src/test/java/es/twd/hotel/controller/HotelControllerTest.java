@@ -56,7 +56,7 @@ class HotelControllerTest {
 	private HotelCreateDTO hotelCreateDTO;
 	private HotelResponseDTO hotelResponseDTO;
 	private HotelUpdateDTO hotelUpdateDTO;
-	private UpdateAddressDTO updateAddressDTO; 
+	private UpdateAddressDTO updateAddressDTO;
 
 	@BeforeEach
 	void setUp() {
@@ -82,6 +82,26 @@ class HotelControllerTest {
 
 		mockMvc.perform(post("/hotels").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(hotelCreateDTO))).andExpect(status().isCreated());
+	}
+
+	@Test
+	@WithMockUser(roles = "USER")
+	void getAllHotelsWithoutPagination_shouldReturnListOfHotels() throws Exception {
+		HotelResponseDTO hotel1 = new HotelResponseDTO(1L, "Hotel Test", 4, hotelCreateDTO.getAddress());
+
+		when(hotelService.getAllHotels()).thenReturn(List.of(hotel1));
+
+		mockMvc.perform(get("/hotels/all")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].name").value("Hotel Test"));
+	}
+
+	@Test
+	@WithMockUser(roles = "USER")
+	void getAllHotelsWithoutPagination_shouldReturnEmptyList() throws Exception {
+		when(hotelService.getAllHotels()).thenReturn(Collections.emptyList());
+
+		mockMvc.perform(get("/hotels/all")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$.length()").value(0));
 	}
 
 	@Test
