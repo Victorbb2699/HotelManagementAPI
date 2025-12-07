@@ -1,5 +1,6 @@
 package es.twd.hotel.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class HotelCreateDTO {
 
+	@Schema(example = "Hotel Example")
 	@NotBlank(message = "Hotel name is required")
 	@Pattern(regexp = ".*[a-zA-Z].*", message = "Hotel name must contain at least one letter")
 	private String name;

@@ -108,6 +108,27 @@ class HotelServiceTest {
 	}
 
 	@Test
+	void getAllHotels_shouldReturnListOfHotels() {
+		when(hotelRepository.findAll()).thenReturn(List.of(hotel));
+
+		List<HotelResponseDTO> response = hotelService.getAllHotels();
+
+		assertThat(response).isNotEmpty();
+		assertThat(response.get(0).getName()).isEqualTo("Hotel Test");
+		verify(hotelRepository, times(1)).findAll();
+	}
+
+	@Test
+	void getAllHotels_shouldReturnEmptyList_whenNoHotels() {
+		when(hotelRepository.findAll()).thenReturn(Collections.emptyList());
+
+		List<HotelResponseDTO> response = hotelService.getAllHotels();
+
+		assertThat(response).isEmpty();
+		verify(hotelRepository, times(1)).findAll();
+	}
+
+	@Test
 	void getAllHotels_shouldReturnPagedHotels() {
 		Pageable pageable = PageRequest.of(0, 10);
 		Page<Hotel> page = new PageImpl<>(List.of(hotel), pageable, 1);
